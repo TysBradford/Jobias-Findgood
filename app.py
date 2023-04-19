@@ -3,6 +3,7 @@ from enum import Enum
 import time
 import sys
 import PyPDF2
+from yaspin import yaspin
 
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import (
@@ -145,16 +146,13 @@ def await_cv_upload():
     cv_msg = "Great, I'll take a peak at your CV now."
     print_bot_message(cv_msg)
 
-    loading_indicator("Reading CV")
-
     try: 
       cv = read_pdf_to_string(user_input.strip())
       
       cv_message = "Here's the contents of my CV. Please reply with a short summary of my experience and skills using bullet points and ask me to confirm if the summary is accurate. Focus on technical skills, tools and frameworks I've used. No need to say hello beforehand.\n\n"
       cv_message += cv
 
-      loading_indicator("Analysing CV")
-      response = process_input(cv_message)
+      response = process_input(cv_message, "Analyzing CV...")
       print_bot_message(response)
     except:
       handle_cv_upload_error()
@@ -196,26 +194,28 @@ def rank_search_results():
 
 
 # Input processing
-def process_input(user_input):
-    output = conversation.predict(input=user_input)
+def process_input(user_input, loading_text="Thinking"):
+    with yaspin(text=loading_text, color="magenta"). as spinner:
+        output = conversation.predict(input=user_input)
+        spinner.ok("✔")
     return output
 
 # Loading indicator (replace!)
-def loading_indicator(label="Thinking"):
-    spinner = ["|", "/", "-", "\\"]
-    sys.stdout.write(Fore.MAGENTA + label + " ")
-    sys.stdout.flush()
-    for _ in range(8):
-        for s in spinner:
-            sys.stdout.write(s)
-            sys.stdout.flush()
-            time.sleep(0.1)
-            sys.stdout.write("\b")
-    sys.stdout.write("\b" * 12)
-    sys.stdout.write(" " * 12)
-    sys.stdout.write("\b" * 12)
-    sys.stdout.flush()
-    sys.stdout.write(Style.RESET_ALL)
+# def loading_indicator(label="Thinking"):
+#     spinner = ["|", "/", "-", "\\"]
+#     sys.stdout.write(Fore.MAGENTA + label + " ")
+#     sys.stdout.flush()
+#     for _ in range(8):
+#         for s in spinner:
+#             sys.stdout.write(s)
+#             sys.stdout.flush()
+#             time.sleep(0.1)
+#             sys.stdout.write("\b")
+#     sys.stdout.write("\b" * 12)
+#     sys.stdout.write(" " * 12)
+#     sys.stdout.write("\b" * 12)
+#     sys.stdout.flush()
+#     sys.stdout.write(Style.RESET_ALL)
 
 # Main App
 def main():
@@ -236,7 +236,7 @@ def main():
         if user_input.lower() == "q":
           break
 
-        loading_indicator()
+        # loading_indicator()
         result = process_input(user_input)
         print_bot_message(result)
 
