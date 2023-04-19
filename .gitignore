@@ -1,0 +1,11 @@
+# Resources
+resources/
+
+# Environments
+.direnv/
+.env
+.venv
+env/
+venv*/
+ENV/
+env.bak/
