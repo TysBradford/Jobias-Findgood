@@ -27,21 +27,12 @@ except ImportError:
   print("Please install the colorama package using 'pip install colorama'")
   sys.exit(1)
 
+import hunt as Hunt
 
 # Constants - Move to config file
 llm_temp = 0.5
 bot_name = "MATCHY-BOT-4000"
 start_search_command = "*START_JOB_SEARCH*"
-system_bot_prompt = """
-Act as an expert recruiter to find me my next great job. Your name is {bot_name}. Do not introduce yourself at the start of the conversation.
-Ask me questions to understand my individual requirements.
-Ask questions one by one for a more natural conversation experience.
-Be fun and personable. Use emojis if you like.
-I will provide you with the contents of my CV as a starting point so you know my skills and experience.
-
-When you have enough information to start a job search, or if I explicitly ask you to, respond with the message: {start_search_command}
-""".format(bot_name=bot_name, start_search_command=start_search_command)
-
 info_to_collect = """
 - Name (required)
 - Current location (required)
@@ -60,6 +51,19 @@ info_to_collect = """
 - Any deal breakers? (optional)
 - Any other specific requirements? (optional)
 """
+system_bot_prompt = """
+Act as an expert technology recruiter to find me my next great job. Your name is {bot_name}. Do not introduce yourself at the start of the conversation.
+Ask me questions to understand my individual requirements.
+Ask questions one by one for a more natural conversation experience.
+Be fun and personable. Use emojis if you like.
+I will provide you with the contents of my CV as a starting point so you know my skills and experience.
+
+Here's a list of info you should try and collect to help you find me a job. Some of these are optional, but the more you can provide, the better. If you're not sure about something, just leave it blank.
+{info_to_collect}
+
+When you have enough information to start a job search, or if I explicitly ask you to, respond with the message: {start_search_command}
+""".format(bot_name=bot_name, start_search_command=start_search_command, info_to_collect=info_to_collect)
+
 
 cv_filepath = ""
 
@@ -148,14 +152,17 @@ def await_cv_upload():
 
     try: 
       cv = read_pdf_to_string(user_input.strip())
-      
-      cv_message = "Here's the contents of my CV. Please reply with a short summary of my experience and skills using bullet points and ask me to confirm if the summary is accurate. Focus on technical skills, tools and frameworks I've used. No need to say hello beforehand.\n\n"
+      cv_filepath = input
+      cv_message = "Here's the contents of my CV. Please reply with a short summary of my experience and skills using bullet points and ask me to confirm if the summary is accurate. Focus on technical stack such as technologies or tools/frameworks I've worked with. No need to say hello beforehand.\n\n"
       cv_message += cv
 
-      response = process_input(cv_message, "Analyzing CV...")
-      print_bot_message(response)
+      process_input(cv_message, "Analyzing CV...")
     except:
       handle_cv_upload_error()
+
+def read_cv_file(cv_filepath):
+  # TODO: Check if pdf of doc
+  return read_pdf_to_string(cv_filepath)
 
 def read_pdf_to_string(pdf_file):
   with open(pdf_file, 'rb' ) as file:
@@ -173,6 +180,7 @@ job_search_inputs_file = "summary.txt"
 def summarise_job_search():
   # Summarise the conversation
   # Store summary in local file
+
   pass
 
 def start_job_search():
@@ -195,27 +203,19 @@ def rank_search_results():
 
 # Input processing
 def process_input(user_input, loading_text="Thinking"):
-    with yaspin(text=loading_text, color="magenta"). as spinner:
+    print("")
+    with yaspin(text=loading_text, color="magenta") as spinner:
         output = conversation.predict(input=user_input)
         spinner.ok("✔")
-    return output
+    
+    # Check if output requires a state transition
+    if start_search_command in output:
+      # Go to job search state
+      Hunt.summarise_job_search()
+      pass
 
-# Loading indicator (replace!)
-# def loading_indicator(label="Thinking"):
-#     spinner = ["|", "/", "-", "\\"]
-#     sys.stdout.write(Fore.MAGENTA + label + " ")
-#     sys.stdout.flush()
-#     for _ in range(8):
-#         for s in spinner:
-#             sys.stdout.write(s)
-#             sys.stdout.flush()
-#             time.sleep(0.1)
-#             sys.stdout.write("\b")
-#     sys.stdout.write("\b" * 12)
-#     sys.stdout.write(" " * 12)
-#     sys.stdout.write("\b" * 12)
-#     sys.stdout.flush()
-#     sys.stdout.write(Style.RESET_ALL)
+    print_bot_message(output)
+    return output
 
 # Main App
 def main():
@@ -236,9 +236,7 @@ def main():
         if user_input.lower() == "q":
           break
 
-        # loading_indicator()
-        result = process_input(user_input)
-        print_bot_message(result)
+        process_input(user_input)
 
 if __name__ == "__main__":
     main()

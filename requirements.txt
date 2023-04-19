@@ -1,0 +1,4 @@
+colorama==0.4.6
+langchain==0.0.144
+PyPDF2==3.0.1
+yaspin==2.3.0
