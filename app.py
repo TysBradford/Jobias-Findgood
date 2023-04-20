@@ -4,6 +4,7 @@ import time
 import sys
 from yaspin import yaspin
 from dotenv import load_dotenv
+import os
 
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import (
@@ -72,7 +73,7 @@ load_dotenv()
 colorama.init()
 
 cv_filepath = ""
-model_name = os.getenv("OPENAI_MODEL_NAME", "")
+model_name = os.getenv("OPEN_AI_MODEL_NAME", "")
 llm = OpenAI(temperature=LLM_TEMP)
 memory = ConversationBufferMemory(return_messages=True)
 chat = ChatOpenAI(temperature=LLM_TEMP, model_name=model_name)
@@ -167,14 +168,20 @@ def await_cv_upload():
       cv_message = "Here's the contents of my CV. Please reply with a short summary of my experience and skills using bullet points and ask me to confirm if the summary is accurate. Focus on technical stack such as technologies or tools/frameworks I've worked with. No need to say hello beforehand.\n\n"
       cv_message += cv
       process_input(cv_message, "Analyzing CV...")
-    except:
+    except Exception as e:
+      print(f"Error: {e}")
       handle_cv_upload_error()
 
 
 # Job search
 def start_job_search():
   # Get summary of user inputs
-  msg = "Summarize the user inputs you have collected so far related to the job search. This summary will be used to do a match against job descriptions. Put this into a format that fills these fields:\n\n{info_to_collect}\n\nAlso include a brief summary of the uploaded CV if you have it".format(info_to_collect=INFO_TO_COLLECT)
+  msg = f"""
+  Summarize the user inputs you have collected so far related to the job search.
+  This summary will be used to do a match against job descriptions.
+  Put this into a format that fills these fields:\n\n{INFO_TO_COLLECT}\n\n
+  Also include a super brief summary points of the uploaded CV if you have it including years of relevant experience.
+  """
   summary = process_input(msg, "Summarising user inputs...", False)
 
   with yaspin(text="Looking for jobs...", color="magenta") as spinner:
@@ -182,12 +189,19 @@ def start_job_search():
 
     output = Hunt.fetch_jobs(summary)
     spinner.ok("✔")
-  
-  display_jobs(output)
-  # TODO: Add to memory for conversation context
 
-def display_jobs(raw_jobs_output):
-  print_bot_message(raw_jobs_output)
+  display_jobs(output)
+
+def display_jobs(jobs_output):
+  jobs_msg = f"""
+Awesome, here are some jobs I found for you!.
+====================
+{jobs_output}
+  """
+  print_bot_message(jobs_msg)
+
+  # TODO: Add to memory for conversation context [not sure if this works!?]
+  memory.chat_memory.add_ai_message(jobs_msg)
 
 
 # Input/Output processing

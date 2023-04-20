@@ -2,15 +2,15 @@
 - Current location: London, England, United Kingdom
 - Email: tys.bradford@gmail.com
 - Current job title: Engineering Manager
-- Technical skills: Engineering management, mobile app development (iOS and Android), team leadership, generative AI, project delivery, product development, and design, programming, automation
-- Experience/seniority level: Senior-level, experienced in management and tech leadership
-- Desired role: Head of Engineering, VP Engineering, or CTO for an early-stage startup
+- Technical skills: Engineering management, mobile app development (iOS and Android), team leadership, generative AI, project delivery, product development, native app development, iBeacon solutions, programming, automation
+- Experience/seniority level: Senior-level, Engineering Manager
+- Desired role: Engineering Manager
 - Desired location: London or fully remote
 - Desired salary: £100k+
-- Desired start date: Immediately
-- Preference for remote work: No preference (remote or in-office)
-- Preference for contract work: Open to contract work of any length
-- Do you have required visa to work in the desired location? Yes, UK visa
-- Particular fields of interest: AI space (preferably, but open to other industries)
-- Any deal breakers? None
-- Any other specific requirements? None
+- Desired start date: ASAP
+- Preference for remote work: Open to fully remote work
+- Preference for contract work: Open to contract work
+- Particular fields of interest: AI companies
+- CV summary: Engineering Manager with strong background in mobile app development (iOS and Android), team leadership, project delivery, and product development. Worked in various tech roles, including Lead Engineer and Software Development Manager. Currently fascinated by generative AI technologies.
+
+Please let me know if any additional information is needed.
