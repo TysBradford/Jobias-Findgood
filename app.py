@@ -73,7 +73,7 @@ load_dotenv()
 colorama.init()
 
 cv_filepath = ""
-model_name = os.getenv("OPEN_AI_MODEL_NAME", "")
+model_name = os.getenv("OPEN_AI_MODEL_NAME", "gpt-3.5-turbo")
 llm = OpenAI(temperature=LLM_TEMP)
 memory = ConversationBufferMemory(return_messages=True)
 chat = ChatOpenAI(temperature=LLM_TEMP, model_name=model_name)
@@ -190,7 +190,7 @@ Awesome, here are some jobs I found for you!.
   """
   print_bot_message(jobs_msg)
 
-  # TODO: Add to memory for conversation context [not sure if this works!?]
+  # Add to memory for conversation context
   memory.chat_memory.add_ai_message(jobs_msg)
 
 
