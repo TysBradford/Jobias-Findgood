@@ -2,8 +2,8 @@ from langchain import OpenAI, ConversationChain
 from enum import Enum
 import time
 import sys
-import PyPDF2
 from yaspin import yaspin
+from dotenv import load_dotenv
 
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import (
@@ -27,13 +27,14 @@ except ImportError:
   print("Please install the colorama package using 'pip install colorama'")
   sys.exit(1)
 
+import gather as Gather
 import hunt as Hunt
 
 # Constants - Move to config file
-llm_temp = 0.5
-bot_name = "MATCHY-BOT-4000"
-start_search_command = "*START_JOB_SEARCH*"
-info_to_collect = """
+LLM_TEMP = 0.5
+BOT_NAME = "Jobias Findgood"
+START_SEARCH_COMMAND = "START_JOB_SEARCH"
+INFO_TO_COLLECT = """
 - Name (required)
 - Current location (required)
 - Email (optional)
@@ -51,8 +52,8 @@ info_to_collect = """
 - Any deal breakers? (optional)
 - Any other specific requirements? (optional)
 """
-system_bot_prompt = """
-Act as an expert technology recruiter to find me my next great job. Your name is {bot_name}. Do not introduce yourself at the start of the conversation.
+SYSTEM_BOT_PROMPT = """
+Act as an expert technical recruiter to find me my next great job. Your expertise is finding roles in technology: engineering, product and design. Your name is {bot_name}. Do not introduce yourself at the start of the conversation.
 Ask me questions to understand my individual requirements.
 Ask questions one by one for a more natural conversation experience.
 Be fun and personable. Use emojis if you like.
@@ -62,38 +63,22 @@ Here's a list of info you should try and collect to help you find me a job. Some
 {info_to_collect}
 
 When you have enough information to start a job search, or if I explicitly ask you to, respond with the message: {start_search_command}
-""".format(bot_name=bot_name, start_search_command=start_search_command, info_to_collect=info_to_collect)
-
-
-cv_filepath = ""
-
-# State machine
-# class STATE(Enum):
-
-current_state = ""
-
-def should_go_to_new_state():
-  # Use an LLM here to determine if we should go to a new state, and if so, what state
-  return False
-
-def did_go_to_new_state(state):
-   # Trigger functions here to handle state transitions
-   pass
+""".format(bot_name=BOT_NAME, start_search_command=START_SEARCH_COMMAND, info_to_collect=INFO_TO_COLLECT)
 
 
 
 # Setup
+load_dotenv()
 colorama.init()
 
+cv_filepath = ""
 model_name = "gpt-4" # "gpt-3.5-turbo"
-llm = OpenAI(temperature=llm_temp)
+llm = OpenAI(temperature=LLM_TEMP)
 memory = ConversationBufferMemory(return_messages=True)
-chat = ChatOpenAI(temperature=llm_temp, model_name=model_name)
-
-# conversation = ConversationChain(llm=llm, verbose=False)
+chat = ChatOpenAI(temperature=LLM_TEMP, model_name=model_name)
 
 prompt = ChatPromptTemplate.from_messages([
-    SystemMessagePromptTemplate.from_template(system_bot_prompt),
+    SystemMessagePromptTemplate.from_template(SYSTEM_BOT_PROMPT),
     MessagesPlaceholder(variable_name="history"),
     HumanMessagePromptTemplate.from_template("{input}")
 ])
@@ -105,14 +90,27 @@ conversation = ConversationChain(
     prompt=prompt
 )
 
-# # Dump everything in here and refactor properly later # #
-# Functions
+# State machine
+current_state = ""
+commands = {
+    START_SEARCH_COMMAND: "Start the job search now we have the needed user inputs"
+}
 
-def print_system_message(message):
-    print(f"{Fore.YELLOW}{message}{Style.RESET_ALL}\n")
+def handle_command(command):
+  if command == START_SEARCH_COMMAND:
+    start_job_search()
+  else:
+    print_system_message("Sorry, I don't understand that command. Please try again.")
 
-def print_bot_message(response):
-    print(f"\n{Fore.GREEN}{response}{Style.RESET_ALL}\n")
+
+def should_go_to_new_state():
+  # Use an LLM here to determine if we should go to a new state, and if so, what state
+  return False
+
+def did_go_to_new_state(state):
+   # Trigger functions here to handle state transitions
+   pass
+
 
 # Welcome
 def display_welcome():
@@ -123,9 +121,22 @@ def display_welcome():
 First we will need to get to know each other a little better. I will ask you a few questions to understand your requirements.
 Once we get that sorted, I will start looking for some cool jobs for you.
 \n
-""".format(bot_name=bot_name)
+""".format(bot_name=BOT_NAME)
   
   print(f"{Fore.CYAN}{welcome_msg}{Style.RESET_ALL}")
+
+# Upload existing session
+def display_upload_prompt(info_summary):
+  msg = "It looks like you have an existing conversation with me. Would you like to upload it so I can pick up where we left off? (y/n)"
+  print_bot_message(msg)
+  user_input = input("Input: ")
+
+  if user_input.lower() == "y":
+      msg = "I'm uploading a summary of our previous conversation. We can pick up from there.\n\n{info_summary}".format(info_summary=info_summary)
+      process_input(msg, "Getting back up to speed...")
+  else:
+    print_bot_message("Ok, let's start again from scratch 🙂")
+    display_cv_prompt()
 
 # CV upload
 def display_cv_prompt():
@@ -151,70 +162,58 @@ def await_cv_upload():
     print_bot_message(cv_msg)
 
     try: 
-      cv = read_pdf_to_string(user_input.strip())
+      cv = Gather.read_cv_file(user_input.strip())
       cv_filepath = input
       cv_message = "Here's the contents of my CV. Please reply with a short summary of my experience and skills using bullet points and ask me to confirm if the summary is accurate. Focus on technical stack such as technologies or tools/frameworks I've worked with. No need to say hello beforehand.\n\n"
       cv_message += cv
-
       process_input(cv_message, "Analyzing CV...")
     except:
       handle_cv_upload_error()
 
-def read_cv_file(cv_filepath):
-  # TODO: Check if pdf of doc
-  return read_pdf_to_string(cv_filepath)
-
-def read_pdf_to_string(pdf_file):
-  with open(pdf_file, 'rb' ) as file:
-      pdf_reader = PyPDF2.PdfReader(file)
-      pdf_text = ''
-
-      for page_num in range(len(pdf_reader.pages)):
-          page = pdf_reader.pages[page_num]
-          pdf_text += page.extract_text()
-
-  return pdf_text
 
 # Job search
-job_search_inputs_file = "summary.txt"
-def summarise_job_search():
-  # Summarise the conversation
-  # Store summary in local file
-
-  pass
-
 def start_job_search():
-  # Load summary from local file
-  # Start job search
-  pass
+  # Get summary of user inputs
+  msg = "Summarize the user inputs you have collected so far related to the job search. This summary will be used to do a match against job descriptions. Put this into a format that fills these fields:\n\n{info_to_collect}\n\nAlso include a brief summary of the uploaded CV if you have it".format(info_to_collect=INFO_TO_COLLECT)
+  summary = process_input(msg, "Summarising user inputs...", False)
 
-def display_search_results():
-  # Display search results
-  pass
+  with yaspin(text="Looking for jobs...", color="magenta") as spinner:
+    Hunt.store_job_search_inputs(summary)
 
-def filter_search_results():
-  # Filter search results
-  pass
+    output = Hunt.fetch_jobs(summary)
+    spinner.ok("✔")
+  
+  display_jobs(output)
+  # TODO: Add to memory for conversation context
 
-def rank_search_results():
-  # Rank search results
-  pass
+def display_jobs(raw_jobs_output):
+  print_bot_message(raw_jobs_output)
 
 
-# Input processing
-def process_input(user_input, loading_text="Thinking"):
+# Input/Output processing
+def print_system_message(message):
+    print(f"{Fore.YELLOW}{message}{Style.RESET_ALL}\n")
+
+def print_bot_message(response):
+    print(f"\n{Fore.GREEN}{response}{Style.RESET_ALL}\n")
+
+def process_input(user_input, loading_text="Thinking", display_result=True):
     print("")
     with yaspin(text=loading_text, color="magenta") as spinner:
         output = conversation.predict(input=user_input)
         spinner.ok("✔")
     
     # Check if output requires a state transition
-    if start_search_command in output:
-      # Go to job search state
-      Hunt.summarise_job_search()
-      pass
+    for command in commands:
+      if command in output:
+        output = output.replace(command, "")
+        print_bot_message(output)
+        handle_command(command)
+        return
 
-    print_bot_message(output)
+    if display_result:
+      print_bot_message(output)
+    
     return output
 
 # Main App
@@ -224,10 +223,12 @@ def main():
     display_welcome()
     
     # Check if there's a past session
-    # TODO
-
-    # Get CV
-    display_cv_prompt()
+    existing_session = Hunt.load_previous_session()
+    if existing_session:
+      display_upload_prompt(existing_session)
+    else:
+      # Get CV
+      display_cv_prompt() 
 
     # Get user input
     while True:
