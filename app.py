@@ -72,7 +72,7 @@ load_dotenv()
 colorama.init()
 
 cv_filepath = ""
-model_name = "gpt-4" # "gpt-3.5-turbo"
+model_name = os.getenv("OPENAI_MODEL_NAME", "")
 llm = OpenAI(temperature=LLM_TEMP)
 memory = ConversationBufferMemory(return_messages=True)
 chat = ChatOpenAI(temperature=LLM_TEMP, model_name=model_name)
