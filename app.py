@@ -91,8 +91,7 @@ conversation = ConversationChain(
     prompt=prompt
 )
 
-# State machine
-current_state = ""
+# Action handling
 commands = {
     START_SEARCH_COMMAND: "Start the job search now we have the needed user inputs"
 }
@@ -102,15 +101,6 @@ def handle_command(command):
     start_job_search()
   else:
     print_system_message("Sorry, I don't understand that command. Please try again.")
-
-
-def should_go_to_new_state():
-  # Use an LLM here to determine if we should go to a new state, and if so, what state
-  return False
-
-def did_go_to_new_state(state):
-   # Trigger functions here to handle state transitions
-   pass
 
 
 # Welcome

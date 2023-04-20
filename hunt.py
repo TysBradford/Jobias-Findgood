@@ -6,8 +6,8 @@ from langchain.llms import OpenAI
 import concurrent.futures
 
 
-JOB_SEARCH_INPUTS_FILE = "inputs_summary.txt"
-FOUND_JOBS_FILE = "found_jobs.txt"
+JOB_SEARCH_INPUTS_FILE = "outputs/inputs_summary.txt"
+FOUND_JOBS_FILE = "outputs/found_jobs.txt"
 NUM_JOBS_TO_FETCH = 20 # Going too high here will start costing token 🤑
 NUM_JOBS_DISPLAYED = 10
 
