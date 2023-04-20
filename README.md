@@ -4,7 +4,7 @@ An autonomous AI bot to help match you to your next job
 ![Jobias Findgood](https://media.discordapp.net/attachments/1077257490737143931/1098630118286569502/tys_cartoon_avatar_illustration_of_wise_geeky_recruiter_called__1d560ae9-f289-4794-9e31-96b98c03140d.png?width=200&height=200)
 
 ## About
-Jobias Findgood is a CLI based AI bot who has been tasked to help you find jobs. He is the product of a 2-day hackathon event.  
+Jobias Findgood is a CLI based AI bot who has been tasked to help you find jobs. He is the product of a 2-day hackathon event. The source code aint easy on the eyes, but seems to get the job done. 
 
 ## Getting started
 
